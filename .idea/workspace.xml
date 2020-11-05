@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="74eed42f-a50c-4421-bb50-2c73b363522d" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ComposerSettings">
+    <execution />
+  </component>
+  <component name="PhpWorkspaceProjectConfiguration">
+    <include_path>
+      <path value="$PROJECT_DIR$/../../manager" />
+      <path value="$PROJECT_DIR$/../../core" />
+      <path value="$PROJECT_DIR$/../../connectors" />
+      <path value="$PROJECT_DIR$/../../assets" />
+    </include_path>
+  </component>
+  <component name="ProjectId" id="1jp10bCc13I4NMZfO9WOeJRe2Eo" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../assets" />
+    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="settings.editor.selected.configurable" value="reference.settings.deploy.options" />
+    <property name="vue.rearranger.settings.migration" value="true" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="74eed42f-a50c-4421-bb50-2c73b363522d" name="Default Changelist" comment="" />
+      <created>1604485996411</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1604485996411</updated>
+      <workItem from="1604485997434" duration="6228000" />
+      <workItem from="1604548458787" duration="5228000" />
+      <workItem from="1604560901337" duration="833000" />
+      <workItem from="1604569696806" duration="1962000" />
+      <workItem from="1604619043707" duration="1313000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="623" y="177" width="663" height="759" key="#PHP" timestamp="1604486022720">
+      <screen x="0" y="27" width="1920" height="1053" />
+    </state>
+    <state x="623" y="177" width="663" height="759" key="#PHP/0.27.1920.1053/1920.0.1920.1080@0.27.1920.1053" timestamp="1604486022720" />
+    <state x="737" y="314" width="424" height="491" key="FileChooserDialogImpl" timestamp="1604486019742">
+      <screen x="0" y="27" width="1920" height="1053" />
+    </state>
+    <state x="737" y="314" width="424" height="491" key="FileChooserDialogImpl/0.27.1920.1053/1920.0.1920.1080@0.27.1920.1053" timestamp="1604486019742" />
+    <state x="456" y="188" width="1007" height="737" key="SettingsEditor" timestamp="1604560983751">
+      <screen x="0" y="27" width="1920" height="1053" />
+    </state>
+    <state x="456" y="188" width="1007" height="737" key="SettingsEditor/0.27.1920.1053@0.27.1920.1053" timestamp="1604560983751" />
+    <state x="771" y="427" width="366" height="273" key="webDeployment.PermissionsDialog" timestamp="1604560965788">
+      <screen x="0" y="27" width="1920" height="1053" />
+    </state>
+    <state x="771" y="427" width="366" height="273" key="webDeployment.PermissionsDialog/0.27.1920.1053@0.27.1920.1053" timestamp="1604560965788" />
+  </component>
+</project>

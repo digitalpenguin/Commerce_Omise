@@ -1,0 +1,48 @@
+[[$[[++commerce_omise.form_chunk_name]]]]
+<script src="{{ js_url }}"></script>
+<script>
+    CommercePayments.onReady(function() {
+        Omise.setPublicKey("{{ public_key }}")
+    });
+    CommercePayments.onSubmit({{ method }}, function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var form = CommercePayments.getForm();
+
+        // Disable the submit button to avoid repeated click.
+        form.querySelector('button[type=submit]').setAttribute('disabled','disabled');
+
+        // Serialize the form fields into a valid card object.
+        var card = {
+            "name": form.querySelector('#omise-holder-name').value,
+            "number": form.querySelector('#omise-number').value,
+            "expiration_month": form.querySelector('#omise-expiration-month').value,
+            "expiration_year": form.querySelector('#omise-expiration-year').value,
+            "security_code": form.querySelector('#omise-security-code').value
+        };
+
+        Omise.createToken("card", card, function (statusCode, response) {
+            if (response.object === "error" || !response.card.security_code_check) {
+                // Display an error message.
+                var message_text = "{{ code_error }}";
+                if(response.object === "error") {
+                    message_text = response.message;
+                }
+                document.getElementById("omise-token-errors").innerHTML = message_text;
+
+                // Re-enable the submit button.
+                form.querySelector('button[type=submit]').removeAttribute('disabled');
+            } else {
+                // Then fill the omise_token.
+                form.querySelector("[name=omise_token]").value = response.id;
+
+                // Remove card number from form before submitting to server.
+                form.querySelector("#omise-number").value = '';
+                form.querySelector("#omise-security-code").value = '';
+
+                // submit token to server.
+                form.submit();
+            }
+        });
+    });
+</script>
