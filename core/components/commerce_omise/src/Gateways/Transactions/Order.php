@@ -7,19 +7,16 @@ use modmore\Commerce\Gateways\Interfaces\TransactionInterface;
 
 class Order implements TransactionInterface
 {
-    protected $isPaid;
+    protected $isPaid = false;
+    protected $isFailed = false;
     protected $orderId;
     protected $orderData;
     protected $verifyData;
 
-    public function __construct($order, $isPaid, $orderData, $verifyResponse = null)
+    public function __construct($order, $orderData)
     {
         $this->orderId = $order->get('id');
-        $this->isPaid = $isPaid;
         $this->orderData = $orderData;
-        if($verifyResponse instanceof Response) {
-            $this->verifyData = $verifyResponse->getData();
-        }
     }
 
     /**
@@ -30,6 +27,15 @@ class Order implements TransactionInterface
     public function isPaid()
     {
         return $this->isPaid;
+    }
+
+    /**
+     * Set isPaid state.
+     *
+     * @param bool $isPaid
+     */
+    public function setPaid(bool $isPaid) {
+        $this->isPaid = $isPaid;
     }
 
     /**
@@ -62,7 +68,16 @@ class Order implements TransactionInterface
      */
     public function isFailed()
     {
-        return false;
+        return $this->isFailed;
+    }
+
+    /**
+     * Set isFailed state.
+     *
+     * @param bool $isFailed
+     */
+    public function setFailed(bool $isFailed) {
+        $this->isFailed = $isFailed;
     }
 
     /**
@@ -105,6 +120,46 @@ class Order implements TransactionInterface
     public function getExtraInformation()
     {
         $extra = [];
+
+        if (array_key_exists('id', $this->orderData)) {
+            $extra['commerce_omise.id'] = $this->orderData['id'];
+        }
+        if (array_key_exists('location', $this->orderData)) {
+            $extra['commerce_omise.location'] = $this->orderData['location'];
+        }
+        if (array_key_exists('amount', $this->orderData)) {
+            $extra['commerce_omise.amount'] = $this->orderData['amount'];
+        }
+        if (array_key_exists('currency', $this->orderData)) {
+            $extra['commerce_omise.currency'] = $this->orderData['currency'];
+        }
+        if (array_key_exists('id', $this->orderData['card'])) {
+            $extra['commerce_omise.card.id'] = $this->orderData['card']['id'];
+        }
+        if (array_key_exists('brand', $this->orderData['card'])) {
+            $extra['commerce_omise.card.brand'] = $this->orderData['card']['brand'];
+        }
+        if (array_key_exists('fingerprint', $this->orderData['card'])) {
+            $extra['commerce_omise.card.fingerprint'] = $this->orderData['card']['fingerprint'];
+        }
+        if (array_key_exists('last_digits', $this->orderData['card'])) {
+            $extra['commerce_omise.card.last_digits'] = $this->orderData['card']['last_digits'];
+        }
+        if (array_key_exists('name', $this->orderData['card'])) {
+            $extra['commerce_omise.card.name'] = $this->orderData['card']['name'];
+        }
+        if (array_key_exists('expiration_month', $this->orderData['card'])) {
+            $extra['commerce_omise.card.expiration_month'] = $this->orderData['card']['expiration_month'];
+        }
+        if (array_key_exists('expiration_year', $this->orderData['card'])) {
+            $extra['commerce_omise.card.expiration_year'] = $this->orderData['card']['expiration_year'];
+        }
+        if (array_key_exists('security_code_check', $this->orderData['card'])) {
+            $extra['commerce_omise.card.security_code_check'] = $this->orderData['card']['security_code_check'];
+        }
+        if (array_key_exists('created_at', $this->orderData['card'])) {
+            $extra['commerce_omise.card.created_at'] = $this->orderData['card']['created_at'];
+        }
 
         return $extra;
     }

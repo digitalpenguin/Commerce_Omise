@@ -7,16 +7,16 @@ use comOrder;
 use comPaymentMethod;
 use comTransaction;
 use DigitalPenguin\Commerce_Omise\API\OmiseClient;
+use DigitalPenguin\Commerce_Omise\Gateways\Transactions\Order;
 use modmore\Commerce\Admin\Widgets\Form\Field;
 use modmore\Commerce\Admin\Widgets\Form\PasswordField;
 use modmore\Commerce\Admin\Widgets\Form\SectionField;
 use modmore\Commerce\Admin\Widgets\Form\TextField;
 use modmore\Commerce\Gateways\Exceptions\TransactionException;
-use modmore\Commerce\Gateways\Interfaces\RedirectTransactionInterface;
+use modmore\Commerce\Gateways\Interfaces\GatewayInterface;
 use modmore\Commerce\Gateways\Interfaces\TransactionInterface;
-use modmore\Commerce\Gateways\Manual\ManualTransaction;
 
-class Omise implements \modmore\Commerce\Gateways\Interfaces\GatewayInterface {
+class Omise implements GatewayInterface {
     /** @var Commerce */
     protected $commerce;
     protected $adapter;
@@ -36,6 +36,7 @@ class Omise implements \modmore\Commerce\Gateways\Interfaces\GatewayInterface {
      *
      * @param comOrder $order
      * @return string
+     * @throws \modmore\Commerce\Exceptions\ViewException
      */
     public function view(comOrder $order)
     {
@@ -59,7 +60,7 @@ class Omise implements \modmore\Commerce\Gateways\Interfaces\GatewayInterface {
      *
      * @param comTransaction $transaction
      * @param array $data
-     * @return TransactionInterface|RedirectTransactionInterface|ManualTransaction
+     * @return TransactionInterface
      * @throws TransactionException
      */
     public function submit(comTransaction $transaction, array $data)
@@ -83,22 +84,21 @@ class Omise implements \modmore\Commerce\Gateways\Interfaces\GatewayInterface {
         }
 
         $client = new OmiseClient(trim($secretKey),$this->commerce->isTestMode());
-        try{
-            $response = $client->request('',[
-                'amount'    =>  $order->get('total'),
-                'currency'  =>  $order->get('currency'),
-                'card'      =>  $data['omise_token']
-            ]);
-            //$this->commerce->modx->log(MODX_LOG_LEVEL_ERROR,print_r($response->getData(),true));
+        $response = $client->request('',[
+            'amount'    =>  $order->get('total'),
+            'currency'  =>  $order->get('currency'),
+            'card'      =>  $data['omise_token']
+        ]);
+
+        if($response->isSuccess()) {
             $data = $response->getData();
-
-        } catch(\Exception $e){
-            $this->adapter->log(MODX_LOG_LEVEL_ERROR,'Error authenticating with Omise: '.$e->getMessage());
-            throw new TransactionException('Error authenticating with Omise');
+            //$this->commerce->modx->log(1,print_r($data,true));
+            $orderTransaction = new Order($order,$data);
+            $orderTransaction->setPaid(true);
+            return $orderTransaction;
+        } else {
+            throw new TransactionException('Error authenticating with Omise...');
         }
-        if(!$data) throw new TransactionException('Error authenticating with Omise');
-
-        return new \modmore\Commerce\Gateways\Manual\ManualTransaction($value);
     }
 
     /**
@@ -106,16 +106,13 @@ class Omise implements \modmore\Commerce\Gateways\Interfaces\GatewayInterface {
      *
      * @param comTransaction $transaction
      * @param array $data
-     * @return ManualTransaction
-     * @throws TransactionException
+     * @return Order
      */
     public function returned(comTransaction $transaction, array $data)
     {
-        $this->commerce->modx->log(1,'IN THE RETURNED FUNCTION');
-        // called when the customer is viewing the payment page after a submit(); we can access stuff in the transaction
-        $value = $transaction->getProperty('required_value');
-
-        return new \modmore\Commerce\Gateways\Manual\ManualTransaction($value);
+        // This function should not be called.
+        $this->commerce->modx->log(1,'THE RETURNED FUNCTION SHOULD NOT HAVE BEEN CALLED.');
+        return new Order($transaction->getOrder(),$data);
     }
 
     /**
