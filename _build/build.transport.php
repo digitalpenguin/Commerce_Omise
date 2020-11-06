@@ -107,23 +107,62 @@ $modx->log(modX::LOG_LEVEL_INFO,'Packaged in core, requirements validator, and m
 
 /**
  * Settings
- *
- * If you have settings, uncomment this section to create them. See data/settings.php.
  */
-//$settings = include $sources['data'] . 'transport.settings.php';
-//if (is_array($settings)) {
-//    $attributes = [
-//        xPDOTransport::UNIQUE_KEY => 'key',
-//        xPDOTransport::PRESERVE_KEYS => true,
-//        xPDOTransport::UPDATE_OBJECT => false,
-//    ];
-//    foreach ($settings as $setting) {
-//        $vehicle = $builder->createVehicle($setting,$attributes);
-//        $builder->putVehicle($vehicle);
-//    }
-//    $modx->log(modX::LOG_LEVEL_INFO,'Packaged in ' . count($settings) . ' system settings.'); flush();
-//    unset($settings,$setting,$attributes);
-//}
+$settings = include $sources['data'] . 'transport.settings.php';
+if (is_array($settings)) {
+    $attributes = [
+        xPDOTransport::UNIQUE_KEY => 'key',
+        xPDOTransport::PRESERVE_KEYS => true,
+        xPDOTransport::UPDATE_OBJECT => false,
+    ];
+    foreach ($settings as $setting) {
+        $vehicle = $builder->createVehicle($setting,$attributes);
+        $builder->putVehicle($vehicle);
+    }
+    $modx->log(modX::LOG_LEVEL_INFO,'Packaged in ' . count($settings) . ' system settings.'); flush();
+    unset($settings,$setting,$attributes);
+}
+
+/**
+ * Category
+ */
+$category= $modx->newObject('modCategory');
+$category->set('category','Commerce_Omise');
+$modx->log(modX::LOG_LEVEL_INFO,'Created category.');
+
+/**
+ * Chunks
+ */
+$chunkSource = include $sources['data'].'transport.chunks.php';
+$chunks = [];
+foreach($chunkSource as $name => $options) {
+    $chunks[$name] = $modx->newObject('modChunk');
+    $chunks[$name]->fromArray([
+        'name' => $name,
+        'description' => $options['description'],
+        'content' => file_get_contents($sources['source_core'] . $options['file']),
+    ], '', true, true);
+}
+$category->addMany($chunks);
+unset($chunks);
+$modx->log(modX::LOG_LEVEL_INFO,'Packaged in chunks.');
+
+$attr = [
+    xPDOTransport::UNIQUE_KEY => 'category',
+    xPDOTransport::PRESERVE_KEYS => false,
+    xPDOTransport::UPDATE_OBJECT => true,
+    xPDOTransport::RELATED_OBJECTS => true,
+    xPDOTransport::RELATED_OBJECT_ATTRIBUTES => [
+        'Chunks' => [
+            xPDOTransport::PRESERVE_KEYS => false,
+            xPDOTransport::UPDATE_OBJECT => true,
+            xPDOTransport::UNIQUE_KEY => 'name',
+        ],
+    ]
+];
+
+$vehicle = $builder->createVehicle($category,$attr);
+$builder->putVehicle($vehicle);
 
 /* now pack in the license file, readme and setup options */
 $builder->setPackageAttributes([
