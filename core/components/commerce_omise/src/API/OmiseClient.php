@@ -17,7 +17,7 @@ class OmiseClient {
             ],
             'base_uri'      =>  'https://api.omise.co/charges',
             'http_errors'   =>  false,
-            'auth'          =>  [$secretKey,null], // must be null, not an empty string!
+            'auth'          =>  [$secretKey,null]
         ]);
     }
 

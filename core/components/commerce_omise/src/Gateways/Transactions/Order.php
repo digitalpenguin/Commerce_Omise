@@ -2,13 +2,13 @@
 
 namespace DigitalPenguin\Commerce_Omise\Gateways\Transactions;
 
-use DigitalPenguin\Commerce_Omise\API\Response;
 use modmore\Commerce\Gateways\Interfaces\TransactionInterface;
 
 class Order implements TransactionInterface
 {
     protected $isPaid = false;
     protected $isFailed = false;
+    protected $errorMsg = '';
     protected $orderId;
     protected $orderData;
     protected $verifyData;
@@ -98,7 +98,17 @@ class Order implements TransactionInterface
      */
     public function getErrorMessage()
     {
-        return '';
+        return $this->errorMsg;
+    }
+
+    /**
+     * Sets the error to return if something goes wrong.
+     *
+     * @param $errorMsg
+     * @return string
+     */
+    public function setErrorMessage($errorMsg) {
+        $this->errorMsg = $errorMsg;
     }
 
     /**

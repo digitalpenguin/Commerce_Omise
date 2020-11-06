@@ -90,14 +90,21 @@ class Omise implements GatewayInterface {
             'card'      =>  $data['omise_token']
         ]);
 
-        if($response->isSuccess()) {
-            $data = $response->getData();
-            //$this->commerce->modx->log(1,print_r($data,true));
+        $data = $response->getData();
+        if(!$data) throw new TransactionException('Error communicating with Omise...');
+
+        //$this->commerce->modx->log(1,print_r($data,true));
+
+        if($data['status'] === 'successful') {
             $orderTransaction = new Order($order,$data);
             $orderTransaction->setPaid(true);
             return $orderTransaction;
         } else {
-            throw new TransactionException('Error authenticating with Omise...');
+            $orderTransaction = new Order($order,$data);
+            $orderTransaction->setFailed(true);
+            $orderTransaction->setErrorMessage($data['failure_message']);
+
+            return $orderTransaction;
         }
     }
 
