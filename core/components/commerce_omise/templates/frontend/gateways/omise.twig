@@ -9,7 +9,7 @@
         e.stopPropagation();
         var form = CommercePayments.getForm();
 
-        // Disable the submit button to avoid repeated click.
+        // Disable the submit button to avoid repeated clicks.
         form.querySelector('button[type=submit]').setAttribute('disabled','disabled');
 
         // Serialize the form fields into a valid card object.

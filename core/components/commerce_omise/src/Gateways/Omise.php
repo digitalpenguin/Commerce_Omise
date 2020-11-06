@@ -6,6 +6,7 @@ use Commerce;
 use comOrder;
 use comPaymentMethod;
 use comTransaction;
+use DigitalPenguin\Commerce_Omise\API\OmiseClient;
 use modmore\Commerce\Admin\Widgets\Form\Field;
 use modmore\Commerce\Admin\Widgets\Form\PasswordField;
 use modmore\Commerce\Admin\Widgets\Form\SectionField;
@@ -18,6 +19,7 @@ use modmore\Commerce\Gateways\Manual\ManualTransaction;
 class Omise implements \modmore\Commerce\Gateways\Interfaces\GatewayInterface {
     /** @var Commerce */
     protected $commerce;
+    protected $adapter;
 
     /** @var comPaymentMethod */
     protected $method;
@@ -26,6 +28,7 @@ class Omise implements \modmore\Commerce\Gateways\Interfaces\GatewayInterface {
     {
         $this->commerce = $commerce;
         $this->method = $method;
+        $this->adapter = $commerce->adapter;
     }
 
     /**
@@ -61,19 +64,40 @@ class Omise implements \modmore\Commerce\Gateways\Interfaces\GatewayInterface {
      */
     public function submit(comTransaction $transaction, array $data)
     {
-        $this->commerce->modx->log(MODX_LOG_LEVEL_ERROR,print_r($_POST,true));
+        //$this->commerce->modx->log(MODX_LOG_LEVEL_ERROR,print_r($_POST,true));
+
         // Validate the request
         if (!array_key_exists('omise_token', $data) || empty($data['omise_token'])) {
             throw new TransactionException('omise_token is missing.');
         }
-
         $value = htmlentities($data['omise_token'], ENT_QUOTES, 'UTF-8');
 
         $transaction->setProperty('omise_token', $value);
         $transaction->save();
 
-        // ManualTransaction is used by the Manual payment gateway and has an always-successful response;
-        // useful for testing but not quite for actual payments.
+        $order = $transaction->getOrder();
+
+        $secretKey = $this->method->getProperty('liveSecretApiKey');
+        if($this->commerce->isTestMode()) {
+            $secretKey = $this->method->getProperty('sandboxSecretApiKey');
+        }
+
+        $client = new OmiseClient(trim($secretKey),$this->commerce->isTestMode());
+        try{
+            $response = $client->request('',[
+                'amount'    =>  $order->get('total'),
+                'currency'  =>  $order->get('currency'),
+                'card'      =>  $data['omise_token']
+            ]);
+            //$this->commerce->modx->log(MODX_LOG_LEVEL_ERROR,print_r($response->getData(),true));
+            $data = $response->getData();
+
+        } catch(\Exception $e){
+            $this->adapter->log(MODX_LOG_LEVEL_ERROR,'Error authenticating with Omise: '.$e->getMessage());
+            throw new TransactionException('Error authenticating with Omise');
+        }
+        if(!$data) throw new TransactionException('Error authenticating with Omise');
+
         return new \modmore\Commerce\Gateways\Manual\ManualTransaction($value);
     }
 
@@ -87,6 +111,7 @@ class Omise implements \modmore\Commerce\Gateways\Interfaces\GatewayInterface {
      */
     public function returned(comTransaction $transaction, array $data)
     {
+        $this->commerce->modx->log(1,'IN THE RETURNED FUNCTION');
         // called when the customer is viewing the payment page after a submit(); we can access stuff in the transaction
         $value = $transaction->getProperty('required_value');
 
