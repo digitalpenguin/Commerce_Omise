@@ -133,7 +133,7 @@ $modx->log(modX::LOG_LEVEL_INFO,'Created category.');
 /**
  * Chunks
  */
-$chunkSource = include $sources['data'].'transport.chunks.php';
+$chunkSource = include $sources['data'].'chunks.php';
 $chunks = [];
 foreach($chunkSource as $name => $options) {
     $chunks[$name] = $modx->newObject('modChunk');
