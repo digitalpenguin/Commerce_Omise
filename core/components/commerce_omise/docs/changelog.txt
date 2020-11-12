@@ -1,3 +1,10 @@
+Commerce_Omise for Commerce 1.0.0-pl
+---------------------------------
+Released on 12/11/2020
+
+- First "production ready" release. Beta testing found no issues.
+
+
 Commerce_Omise for Commerce 1.0.0-beta1
 ---------------------------------
 Released on 06/11/2020
