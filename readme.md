@@ -56,6 +56,16 @@ Default chunk:
 
 When editing the duplicated chunk be sure not to change the `id` or `name` attributes on any of the elements or Omise won't authenticate if it's missing data.
 
+3D Secure Mode
+-
+Omise say their fraud analysts will activate 3D secure on accounts where they deem it necessary.
+https://www.omise.co/how-to-implement-3-D-Secure
+Version 1.1.0 brings support for the 3D Secure mode. There is an added checkbox on the same page
+you enter your API keys to enable it.
+If 3D secure is active, you will not be able to test it on a local development environment. As it 
+requires a redirect away to a bank verification page and then back to your Commerce webshop, it 
+needs to be on a server with a Fully Qualified Domain Name (FQDN). 
+
 Sandbox Testing
 -
 Here are a list of the credit card numbers you can use when testing with the Sandbox API.
