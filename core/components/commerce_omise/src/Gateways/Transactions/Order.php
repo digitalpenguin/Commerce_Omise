@@ -105,7 +105,6 @@ class Order implements TransactionInterface
      * Sets the error to return if something goes wrong.
      *
      * @param $errorMsg
-     * @return string
      */
     public function setErrorMessage($errorMsg) {
         $this->errorMsg = $errorMsg;

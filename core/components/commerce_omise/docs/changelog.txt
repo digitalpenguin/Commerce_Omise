@@ -1,3 +1,10 @@
+Commerce_Omise for Commerce 1.1.0-beta1
+---------------------------------
+Released on 23/11/2020
+
+- Added 3D Secure option which includes a redirect to a bank verification page after payment is submitted, plus
+a charge status check on returning to the webshop.
+
 Commerce_Omise for Commerce 1.0.0-pl
 ---------------------------------
 Released on 12/11/2020

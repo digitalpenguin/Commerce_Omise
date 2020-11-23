@@ -15,7 +15,7 @@ class OmiseClient {
             'headers' => [
                 'Content-Type'  => 'application/json'
             ],
-            'base_uri'      =>  'https://api.omise.co/charges',
+            'base_uri'      =>  'https://api.omise.co',
             'http_errors'   =>  false,
             'auth'          =>  [$secretKey,null]
         ]);
