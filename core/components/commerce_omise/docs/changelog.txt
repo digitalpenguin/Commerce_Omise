@@ -1,3 +1,10 @@
+Commerce_Omise for Commerce 1.1.0-pl
+---------------------------------
+Released on 24/11/2020
+
+- Added Thai lexicons (thanks @nate)
+- 3D Secure mode tested and good to go.
+
 Commerce_Omise for Commerce 1.1.0-beta1
 ---------------------------------
 Released on 23/11/2020
