@@ -88,7 +88,7 @@ class Omise implements GatewayInterface {
 
 
         $returnUrl = GatewayHelper::getReturnUrl($transaction);
-        $this->commerce->modx->log(MODX_LOG_LEVEL_ERROR,$returnUrl);
+        //$this->commerce->modx->log(MODX_LOG_LEVEL_ERROR,$returnUrl);
 
         $client = new OmiseClient(trim($secretKey),$this->commerce->isTestMode());
         $requestParams = [
@@ -105,7 +105,7 @@ class Omise implements GatewayInterface {
         $data = $response->getData();
         if(!$data) throw new TransactionException('Error communicating with Omise...');
 
-        $this->commerce->modx->log(MODX_LOG_LEVEL_ERROR,print_r($data,true));
+        //$this->commerce->modx->log(MODX_LOG_LEVEL_ERROR,print_r($data,true));
 
 
         // Things are handled differently here if 3D Secure is enabled.
@@ -162,11 +162,11 @@ class Omise implements GatewayInterface {
         }
 
         $chargeId = $orderData['id'];
-        $this->commerce->modx->log(1,'Charge ID: '.$chargeId);
+        //$this->commerce->modx->log(1,'Charge ID: '.$chargeId);
 
         $data = $this->getChargeData($secretKey,$chargeId);
 
-        $this->commerce->modx->log(1,'Status: '.$data['status']);
+        //$this->commerce->modx->log(1,'Status: '.$data['status']);
 
         if($data['status'] === 'successful') {
             $orderTransaction = new Order($order,$data);
