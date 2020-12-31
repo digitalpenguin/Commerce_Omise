@@ -12,3 +12,7 @@ $_lang['commerce_omise.form.number'] = 'Number';
 $_lang['commerce_omise.form.date'] = 'Date';
 $_lang['commerce_omise.form.security_code'] = 'Security Code';
 $_lang['commerce_omise.form.security_code_error'] = 'Security code check failed. Please make sure you entered your credentials correctly.';
+
+// PromptPay
+$_lang['commerce_omise.promptpay'] = 'PromptPay';
+$_lang['commerce_omise.omise_promptpay'] = 'Omise - PromptPay';

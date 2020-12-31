@@ -1,0 +1,38 @@
+<div class="c-checkout c-checkout-step c-checkout-transaction-pending">
+    <h2>{{ lex('commerce.checkout_payment_header') }}</h2>
+
+    {% include 'frontend/response-messages.twig' %}
+
+    <p>{{ lex('commerce.transaction_pending_summary', {'total': order.total_formatted, 'method': method.name, 'transaction_total': transaction.amount_formatted}) }}</p>
+
+    <!-- Insert QR Code here -->
+    {% if transaction.properties.omise_promptpay_qrcode %}
+        <div id="omise-promptpay-qrcode">
+            <img alt="Omise PromptPay QR Code" src="{{ transaction.properties.omise_promptpay_qrcode }}">
+        </div>
+    {% endif %}
+
+    {% if transaction.properties.redirectUrl %}
+        <form method="POST" action="{{ current_url }}" class="commerce-pending-transaction-form commerce-pending-transaction-form-retry">
+            <input type="hidden" name="retry" value="1">
+            <button class="c-button" type="submit">{{ lex('commerce.transaction_pending_to_gateway', { method: method.name }) }}</button>
+        </form>
+    {% endif %}
+
+    <form method="POST" action="{{ current_url }}" class="commerce-pending-transaction-form commerce-pending-transaction-form-refresh">
+        <p>{{ lex('commerce.transaction_pending_refresh_info') }}</p>
+        <button class="c-button" type="submit">{{ lex('commerce.transaction_pending_refresh') }}</button>
+    </form>
+
+    <form method="POST" action="{{ current_url }}" class="commerce-pending-transaction-form commerce-pending-transaction-form-cancel">
+        <input type="hidden" name="transaction" value="{{ transaction.id }}">
+        <input type="hidden" name="cancel_transaction" value="1">
+
+        <p>{{ lex('commerce.transaction_pending_cancel_info') }}</p>
+
+        <button class="c-button" type="submit">{{ lex('commerce.transaction_pending_cancel') }}</button>
+    </form>
+</div>
+<div class="c-checkout-summary">
+    {% include 'frontend/checkout/partial/summary.twig' %}
+</div>

@@ -50,6 +50,8 @@ class Omise extends BaseModule {
     public function addGateway(Gateways $event)
     {
         $event->addGateway(\DigitalPenguin\Commerce_Omise\Gateways\Omise::class, $this->adapter->lexicon('commerce_omise.gateway'));
+        $event->addGateway(\DigitalPenguin\Commerce_Omise\Gateways\PromptPay::class, $this->adapter->lexicon('commerce_omise.omise_promptpay'));
+
     }
 
     public function getModuleConfiguration(\comModule $module)

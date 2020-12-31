@@ -1,0 +1,42 @@
+<div id="omise-token-errors"></div>
+<input type="hidden" id="omise-promptpay-token" name="omise_promptpay_token">
+<button type="submit">Pay with PromptPay</button>
+<script src="{{ js_url }}"></script>
+<script>
+    CommercePayments.onReady(function() {
+        Omise.setPublicKey("{{ public_key }}")
+    });
+    CommercePayments.onSubmit({{ method }}, function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var form = CommercePayments.getForm();
+
+        // Disable the submit button to avoid repeated clicks.
+        form.querySelector('button[type=submit]').setAttribute('disabled','disabled');
+
+        Omise.createSource('promptpay', {
+            "amount": {{ amount }},
+            "currency": "{{ currency }}"
+        }, function(statusCode, response) {
+            console.log(statusCode);
+            console.log(response);
+
+            if(statusCode !== 200) {
+                // Display an error message.
+                var message_text = "{{ code_error }}";
+                if (response.object === "error") {
+                    message_text = response.message;
+                }
+                document.getElementById("omise-token-errors").innerHTML = message_text;
+
+                // Re-enable the submit button.
+                form.querySelector('button[type=submit]').removeAttribute('disabled');
+
+            } else {
+                form.querySelector("[name=omise_promptpay_token]").value = response.id;
+                // submit token to server.
+                form.submit();
+            }
+        });
+    });
+</script>
