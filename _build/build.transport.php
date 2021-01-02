@@ -23,8 +23,8 @@ if (!defined('MOREPROVIDER_BUILD')) {
     /* define version */
     define('PKG_NAME', 'Commerce_Omise');
     define('PKG_NAMESPACE', 'commerce_omise');
-    define('PKG_VERSION', '1.1.0');
-    define('PKG_RELEASE', 'pl');
+    define('PKG_VERSION', '1.2.0');
+    define('PKG_RELEASE', 'beta1');
 
     /* load modx */
     require_once dirname(__DIR__) . '/config.core.php';
