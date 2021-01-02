@@ -109,4 +109,30 @@ https://your-domain/assets/components/commerce/notify.php?method=1
 ```
 Note: the `?method=1` param refers to the id of this payment method. Change accordingly.
 
+Payment Method 3: TrueMoney Wallet
+==
 
+TrueMoney Wallet is a `redirect` payment flow. After selecting this payment method the customer enters their
+TrueMoney Wallet phone number and submits the form. They are redirected to the TrueMoney authentication page, 
+and a one-time code is sent to their phone.
+After entering the correct code, the customer is redirected back to the checkout "thank you" page.
+
+![TrueMoney Payment Flow](https://cdn.omise.co/assets/screenshots/articles/2017-11-02/truemoney/payment_flow.png)
+
+The only setup required for this payment method is entering the public and secret API keys.
+
+Payment Method 4: Internet Banking
+==
+
+The internet banking method uses a `redirect` payment flow similar to the TrueMoney Wallet payment method, or the 
+3D secure portion of card payments. 
+
+The customer selects the bank they would like to pay with:
+- **internet_banking_bay** : Krungsri Online
+- **internet_banking_bbl** : Bualuang iBanking
+- **internet_banking_ktb** : KTB Netbank
+- **internet_banking_scb** : SCB Easy Net
+
+The values above represent which banks authorisation page they'll be redirected to.
+
+![Internet Banking Payment Flow](https://omise-cdn.s3.amazonaws.com/assets/screenshots/internet-banking/Step%202.jpg)

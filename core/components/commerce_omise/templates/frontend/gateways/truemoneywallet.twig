@@ -1,0 +1,60 @@
+<div id="omise-token-errors"></div>
+<input type="hidden" id="omise-truemoney-token" name="omise_truemoney_token">
+<label for="omise-truemoney-phone">{{ label }}</label>
+<input type="text" id="omise-truemoney-phone" name="omise_truemoney_phone" value="{{ phone_number }}" placeholder="{{ example }}">
+
+<script>
+    CommercePayments.onReady(function() {
+        Omise.setPublicKey("{{ public_key }}");
+
+        // Set phone field as required only when this payment method is selected. This is so it doesn't interfere with other methods submitting.
+        document.querySelectorAll("input[name='choose_payment_method']").forEach(function(input) {
+            input.addEventListener('change', function() {
+                if(document.getElementById("payment-method-{{ method }}").checked) {
+                    document.getElementById("omise-truemoney-phone").setAttribute('required','');
+                } else {
+                    document.getElementById("omise-truemoney-phone").removeAttribute('required');
+                }
+
+            });
+        });
+
+    });
+
+    CommercePayments.onSubmit({{ method }}, function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var form = CommercePayments.getForm();
+
+        // Disable the submit button to avoid repeated clicks.
+        form.querySelector('button[type=submit]').setAttribute('disabled','disabled');
+
+        var phoneNumber = document.getElementById("omise-truemoney-phone").value;
+
+        Omise.createSource('truemoney', {
+            "amount"        :   {{ amount }},
+            "currency"      :   "{{ currency }}",
+            "phone_number"  :   phoneNumber
+        }, function(statusCode, response) {
+            //console.log(statusCode);
+            //console.log(response);
+
+            if(statusCode !== 200) {
+                // Display an error message.
+                var message_text = "{{ code_error }}";
+                if (response.object === "error") {
+                    message_text = response.message;
+                }
+                document.getElementById("omise-token-errors").innerHTML = message_text;
+
+                // Re-enable the submit button.
+                form.querySelector('button[type=submit]').removeAttribute('disabled');
+
+            } else {
+                form.querySelector("[name=omise_truemoney_token]").value = response.id;
+                // submit token to server.
+                form.submit();
+            }
+        });
+    });
+</script>

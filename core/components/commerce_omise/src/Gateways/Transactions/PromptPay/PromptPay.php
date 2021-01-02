@@ -1,5 +1,5 @@
 <?php
-namespace DigitalPenguin\Commerce_Omise\Gateways\Transactions;
+namespace DigitalPenguin\Commerce_Omise\Gateways\Transactions\PromptPay;
 
 use modmore\Commerce\Gateways\Interfaces\TransactionInterface;
 use modmore\Commerce\Gateways\Interfaces\WebhookTransactionInterface;

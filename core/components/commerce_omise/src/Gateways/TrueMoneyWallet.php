@@ -7,18 +7,16 @@ use comOrder;
 use comPaymentMethod;
 use comTransaction;
 use DigitalPenguin\Commerce_Omise\API\OmiseClient;
-use DigitalPenguin\Commerce_Omise\Gateways\Transactions\Card\Redirect;
-use DigitalPenguin\Commerce_Omise\Gateways\Transactions\Card\Order;
+use DigitalPenguin\Commerce_Omise\Gateways\Transactions\TrueMoneyWallet\Order;
+use DigitalPenguin\Commerce_Omise\Gateways\Transactions\TrueMoneyWallet\Redirect;
 use modmore\Commerce\Admin\Widgets\Form\Field;
 use modmore\Commerce\Admin\Widgets\Form\PasswordField;
-use modmore\Commerce\Admin\Widgets\Form\CheckboxField;
 use modmore\Commerce\Admin\Widgets\Form\TextField;
 use modmore\Commerce\Gateways\Exceptions\TransactionException;
 use modmore\Commerce\Gateways\Helpers\GatewayHelper;
 use modmore\Commerce\Gateways\Interfaces\GatewayInterface;
-use modmore\Commerce\Gateways\Interfaces\TransactionInterface;
 
-class Omise implements GatewayInterface {
+class TrueMoneyWallet implements GatewayInterface {
     /** @var Commerce */
     protected $commerce;
     protected $adapter;
@@ -48,10 +46,15 @@ class Omise implements GatewayInterface {
             $publicKey = $this->method->getProperty('sandboxPublicApiKey');
         }
 
-        return $this->commerce->view()->render('frontend/gateways/omise.twig', [
+        return $this->commerce->view()->render('frontend/gateways/truemoneywallet.twig', [
             'method'        =>  $this->method->get('id'),
+            'currency'      =>  $order->get('currency'),
+            'amount'        =>  $order->get('total'),
+            'phone_number'  =>  $order->get('phone'),
             'public_key'    =>  trim($publicKey),
-            'code_error'    =>  $this->commerce->adapter->lexicon('commerce_omise.form.security_code_error')
+            'code_error'    =>  $this->commerce->adapter->lexicon('commerce_omise.form.security_code_error'),
+            'label'         =>  $this->commerce->adapter->lexicon('commerce_omise.omise_truemoney_label'),
+            'example'       =>  $this->commerce->adapter->lexicon('commerce_omise.omise_truemoney_example'),
         ]);
     }
 
@@ -60,7 +63,7 @@ class Omise implements GatewayInterface {
      *
      * @param comTransaction $transaction
      * @param array $data
-     * @return TransactionInterface
+     * @return Redirect
      * @throws TransactionException
      */
     public function submit(comTransaction $transaction, array $data)
@@ -68,12 +71,12 @@ class Omise implements GatewayInterface {
         //$this->commerce->modx->log(MODX_LOG_LEVEL_ERROR,print_r($_POST,true));
 
         // Validate the request
-        if (!array_key_exists('omise_token', $data) || empty($data['omise_token'])) {
-            throw new TransactionException('omise_token is missing.');
+        if (!array_key_exists('omise_truemoney_token', $data) || empty($data['omise_truemoney_token'])) {
+            throw new TransactionException('omise_truemoney_token is missing.');
         }
-        $value = htmlentities($data['omise_token'], ENT_QUOTES, 'UTF-8');
+        $value = htmlentities($data['omise_truemoney_token'], ENT_QUOTES, 'UTF-8');
 
-        $transaction->setProperty('omise_token', $value);
+        $transaction->setProperty('omise_truemoney_token', $value);
         $transaction->save();
 
         $order = $transaction->getOrder();
@@ -91,11 +94,9 @@ class Omise implements GatewayInterface {
         $requestParams = [
             'amount'        =>  $order->get('total'),
             'currency'      =>  $order->get('currency'),
-            'card'          =>  $data['omise_token'],
+            'source'          =>  $data['omise_truemoney_token'],
+            'return_uri'    =>  $returnUrl
         ];
-        if($this->method->getProperty('is3dSecure')) {
-            $requestParams['return_uri'] = $returnUrl;
-        }
         $response = $client->request('/charges',$requestParams,'POST');
 
 
@@ -105,35 +106,17 @@ class Omise implements GatewayInterface {
         //$this->commerce->modx->log(MODX_LOG_LEVEL_ERROR,print_r($data,true));
 
 
-        // Things are handled differently here if 3D Secure is enabled.
-        if($this->method->getProperty('is3dSecure')) {
+        // We take the authorize_uri from the response and redirect the customer there.
+        //$this->commerce->modx->log(MODX_LOG_LEVEL_ERROR,$authorizeUrl);
+        $redirectTransaction = new Redirect($order,$data);
 
-            // If 3D Secure is enabled, we take the authorize_uri from the response and redirect the customer there.
-            //$authorizeUrl = $data['authorize_uri'];
-            //$this->commerce->modx->log(MODX_LOG_LEVEL_ERROR,$authorizeUrl);
-            $redirectTransaction = new Redirect($order,$data);
+        // Save data to session for when returned
+        $_SESSION['commerce_omise_truemoney']['data'] = $data;
+        //$this->commerce->modx->log(MODX_LOG_LEVEL_ERROR,print_r($_SESSION,true));
 
-            // Save data to session for when returned
-            $_SESSION['commerce_omise']['data'] = $data;
-            //$this->commerce->modx->log(MODX_LOG_LEVEL_ERROR,print_r($_SESSION,true));
+        return $redirectTransaction;
 
-            return $redirectTransaction;
 
-        } else {
-
-            // If no 3D Secure, check for successful status.
-            if($data['status'] === 'successful') {
-                $orderTransaction = new Order($order,$data);
-                $orderTransaction->setPaid(true);
-                return $orderTransaction;
-            } else {
-                $orderTransaction = new Order($order,$data);
-                $orderTransaction->setFailed(true);
-                $orderTransaction->setErrorMessage($data['failure_message']);
-
-                return $orderTransaction;
-            }
-        }
     }
 
     /**
@@ -145,11 +128,9 @@ class Omise implements GatewayInterface {
      */
     public function returned(comTransaction $transaction, array $data)
     {
-        // This function is only returned when 3D secure is active and the customer is returned from the redirect to their bank.
-
         $order = $transaction->getOrder();
 
-        $orderData = $_SESSION['commerce_omise']['data'];
+        $orderData = $_SESSION['commerce_omise_truemoney']['data'];
         //$this->commerce->modx->log(MODX_LOG_LEVEL_ERROR,print_r($_SESSION,true));
 
         // We now have to make an API request to check the status of the charge after the redirect.
@@ -202,12 +183,6 @@ class Omise implements GatewayInterface {
     {
 
         $fields = [];
-
-        $fields[] = new CheckboxField($this->commerce, [
-            'name' => 'properties[is3dSecure]',
-            'label' => 'Enable 3D Secure',
-            'value' => $method->getProperty('is3dSecure'),
-        ]);
 
         $fields[] = new TextField($this->commerce, [
             'name' => 'properties[sandboxPublicApiKey]',

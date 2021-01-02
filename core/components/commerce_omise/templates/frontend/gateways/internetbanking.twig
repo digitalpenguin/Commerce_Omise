@@ -1,24 +1,34 @@
 <div id="omise-token-errors"></div>
-<input type="hidden" id="omise-promptpay-token" name="omise_promptpay_token">
+<input type="hidden" id="omise-internetbanking-token" name="omise_internetbanking_token">
+<label for="omise-internetbanking-bank">{{ label }}</label>
+<select id="omise-internetbanking-bank">
+    <option value="internet_banking_bay">{{ internet_banking_bay }}</option>
+    <option value="internet_banking_bbl">{{ internet_banking_bbl }}</option>
+    <option value="internet_banking_ktb">{{ internet_banking_ktb }}</option>
+    <option value="internet_banking_scb">{{ internet_banking_scb }}</option>
+</select>
+
 <script>
     CommercePayments.onReady(function() {
-        Omise.setPublicKey("{{ public_key }}")
+        Omise.setPublicKey("{{ public_key }}");
     });
+
     CommercePayments.onSubmit({{ method }}, function (e) {
         e.preventDefault();
         e.stopPropagation();
-
         var form = CommercePayments.getForm();
 
         // Disable the submit button to avoid repeated clicks.
         form.querySelector('button[type=submit]').setAttribute('disabled','disabled');
 
-        Omise.createSource('promptpay', {
-            "amount": {{ amount }},
-            "currency": "{{ currency }}"
+        var bankCode = document.getElementById("omise-internetbanking-bank").value;
+
+        Omise.createSource(bankCode, {
+            "amount"        :   {{ amount }},
+            "currency"      :   "{{ currency }}",
         }, function(statusCode, response) {
-            //console.log(statusCode);
-            //console.log(response);
+            console.log(statusCode);
+            console.log(response);
 
             if(statusCode !== 200) {
                 // Display an error message.
@@ -32,7 +42,7 @@
                 form.querySelector('button[type=submit]').removeAttribute('disabled');
 
             } else {
-                form.querySelector("[name=omise_promptpay_token]").value = response.id;
+                form.querySelector("[name=omise_internetbanking_token]").value = response.id;
                 // submit token to server.
                 form.submit();
             }

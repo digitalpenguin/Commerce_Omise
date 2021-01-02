@@ -1,5 +1,5 @@
 <?php
-namespace DigitalPenguin\Commerce_Omise\Gateways\Transactions;
+namespace DigitalPenguin\Commerce_Omise\Gateways\Transactions\TrueMoneyWallet;
 
 use modmore\Commerce\Gateways\Interfaces\RedirectTransactionInterface;
 use modmore\Commerce\Gateways\Interfaces\TransactionInterface;

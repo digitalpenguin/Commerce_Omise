@@ -9,10 +9,8 @@ use comTransaction;
 use DigitalPenguin\Commerce_Omise\API\OmiseClient;
 use modmore\Commerce\Admin\Widgets\Form\Field;
 use modmore\Commerce\Admin\Widgets\Form\PasswordField;
-use modmore\Commerce\Admin\Widgets\Form\SectionField;
 use modmore\Commerce\Admin\Widgets\Form\TextField;
 use modmore\Commerce\Gateways\Exceptions\TransactionException;
-use modmore\Commerce\Gateways\Helpers\GatewayHelper;
 use modmore\Commerce\Gateways\Interfaces\GatewayInterface;
 use modmore\Commerce\Gateways\Interfaces\TransactionInterface;
 use modmore\Commerce\Gateways\Interfaces\SharedWebhookGatewayInterface;
@@ -42,31 +40,16 @@ class PromptPay implements GatewayInterface, WebhookGatewayInterface, SharedWebh
      */
     public function view(comOrder $order)
     {
-        $total = $order->get('total');
-
-        /*
-         * Check if currency has subunits.
-         * If a currency has subunits, it needs to be formatted correctly when sending to the API
-         */
-        $currency = $order->getCurrency();
-        if($currency->get('subunits') > 0) {
-            // Convert from cents if currency has subunits
-            $total = round($order->get('total') / 100, $currency->get('subunits'));
-            // Ensure using decimal point if currency has subunits.
-            $total = str_replace(',', '.', (string)$total);
-        }
-
         // Load sandbox version if Commerce is in test mode.
         $publicKey = $this->method->getProperty('livePublicApiKey');
         if($this->commerce->isTestMode()) {
             $publicKey = $this->method->getProperty('sandboxPublicApiKey');
         }
-        $jsUrl = 'https://cdn.omise.co/omise.js?v='.round(microtime(true)/100);
+
         return $this->commerce->view()->render('frontend/gateways/promptpay.twig', [
             'method'        =>  $this->method->get('id'),
-            'js_url'        =>  $jsUrl,
             'currency'      =>  $order->get('currency'),
-            'amount'        =>  $total,
+            'amount'        =>  $order->get('total'),
             'public_key'    =>  trim($publicKey),
             'code_error'    =>  $this->commerce->adapter->lexicon('commerce_omise.form.security_code_error')
         ]);
@@ -138,7 +121,7 @@ class PromptPay implements GatewayInterface, WebhookGatewayInterface, SharedWebh
         // $responseData['status'] = 'successful';
 
         $data['charge'] = $responseData;
-        $order = new \DigitalPenguin\Commerce_Omise\Gateways\Transactions\PromptPay($transaction->getOrder(),$data);
+        $order = new \DigitalPenguin\Commerce_Omise\Gateways\Transactions\PromptPay\PromptPay($transaction->getOrder(),$data);
 
         $successful = false;
         switch($responseData['status']) {
@@ -181,7 +164,7 @@ class PromptPay implements GatewayInterface, WebhookGatewayInterface, SharedWebh
      */
     public function submit(comTransaction $transaction, array $data)
     {
-        $this->commerce->modx->log(MODX_LOG_LEVEL_ERROR,print_r($_POST,true));
+        $this->commerce->modx->log(MODX_LOG_LEVEL_INFO,print_r($_POST,true));
 
         // Validate the request
         if (!array_key_exists('omise_promptpay_token', $data) || empty($data['omise_promptpay_token'])) {
@@ -229,10 +212,10 @@ class PromptPay implements GatewayInterface, WebhookGatewayInterface, SharedWebh
         // Set Charge id in transaction
         $transaction->setProperty('charge_id',$responseData['id']);
 
-        $this->commerce->modx->log(MODX_LOG_LEVEL_ERROR,print_r($responseData,true));
+        $this->commerce->modx->log(MODX_LOG_LEVEL_INFO,print_r($responseData,true));
 
 
-        $promptPayTransaction = new \DigitalPenguin\Commerce_Omise\Gateways\Transactions\PromptPay($order,$data);
+        $promptPayTransaction = new \DigitalPenguin\Commerce_Omise\Gateways\Transactions\PromptPay\PromptPay($order,$data);
         return $promptPayTransaction;
     }
 
@@ -241,11 +224,11 @@ class PromptPay implements GatewayInterface, WebhookGatewayInterface, SharedWebh
      *
      * @param comTransaction $transaction
      * @param array $data
-     * @return \DigitalPenguin\Commerce_Omise\Gateways\Transactions\PromptPay
+     * @return \DigitalPenguin\Commerce_Omise\Gateways\Transactions\PromptPay\PromptPay
      */
     public function returned(comTransaction $transaction, array $data)
     {
-        return new \DigitalPenguin\Commerce_Omise\Gateways\Transactions\PromptPay($transaction->getOrder(),$data);
+        return new \DigitalPenguin\Commerce_Omise\Gateways\Transactions\PromptPay\PromptPay($transaction->getOrder(),$data);
 
     }
 
@@ -260,11 +243,6 @@ class PromptPay implements GatewayInterface, WebhookGatewayInterface, SharedWebh
 
         $fields = [];
 
-        $fields[] = new SectionField($this->commerce, [
-            'label' => 'Sandbox Mode Authentication',
-            'description' => 'When Commerce is in test mode, the sandbox credentials are used.',
-        ]);
-
         $fields[] = new TextField($this->commerce, [
             'name' => 'properties[sandboxPublicApiKey]',
             'label' => 'Public Key (Sandbox)',
@@ -277,11 +255,6 @@ class PromptPay implements GatewayInterface, WebhookGatewayInterface, SharedWebh
             'label' => 'Secret Key (Sandbox)',
             'description' => 'Enter your secret API key.',
             'value' => $method->getProperty('sandboxSecretApiKey'),
-        ]);
-
-        $fields[] = new SectionField($this->commerce, [
-            'label' => 'Live Mode Authentication',
-            'description' => 'When Commerce is in live mode, the live credentials are used.',
         ]);
 
         $fields[] = new TextField($this->commerce, [

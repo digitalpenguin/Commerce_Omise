@@ -42,6 +42,14 @@ class Omise extends BaseModule {
 
         // Register the gateway
         $dispatcher->addListener(\Commerce::EVENT_GET_PAYMENT_GATEWAYS, [$this, 'addGateway']);
+
+        // Load JS lib on checkout pages
+        if($this->commerce->modx->context->get('key') !== 'mgr') {
+            if ($this->commerce->modx->resource->get('id') === (int)$this->commerce->modx->getOption('commerce.checkout_resource')) {
+                $jsUrl = 'https://cdn.omise.co/omise.js';
+                $this->commerce->modx->regClientStartupScript($jsUrl);
+            }
+        }
     }
 
     /**
@@ -51,6 +59,8 @@ class Omise extends BaseModule {
     {
         $event->addGateway(\DigitalPenguin\Commerce_Omise\Gateways\Omise::class, $this->adapter->lexicon('commerce_omise.gateway'));
         $event->addGateway(\DigitalPenguin\Commerce_Omise\Gateways\PromptPay::class, $this->adapter->lexicon('commerce_omise.omise_promptpay'));
+        $event->addGateway(\DigitalPenguin\Commerce_Omise\Gateways\TrueMoneyWallet::class, $this->adapter->lexicon('commerce_omise.omise_truemoneywallet'));
+        $event->addGateway(\DigitalPenguin\Commerce_Omise\Gateways\InternetBanking::class, $this->adapter->lexicon('commerce_omise.omise_internetbanking'));
 
     }
 
