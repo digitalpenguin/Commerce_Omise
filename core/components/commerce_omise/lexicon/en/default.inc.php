@@ -18,6 +18,8 @@ $_lang['commerce_omise.form.security_code_error'] = 'Security code check failed.
 $_lang['commerce_omise.promptpay'] = 'PromptPay';
 $_lang['commerce_omise.omise_promptpay'] = 'Omise - PromptPay';
 
+
+
 // TrueMoney Wallet
 $_lang['commerce_omise.truemoneywallet'] = 'TrueMoney Wallet';
 $_lang['commerce_omise.omise_truemoneywallet'] = 'Omise - TrueMoney Wallet';

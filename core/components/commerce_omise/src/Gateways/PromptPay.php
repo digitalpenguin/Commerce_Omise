@@ -15,6 +15,7 @@ use modmore\Commerce\Gateways\Interfaces\GatewayInterface;
 use modmore\Commerce\Gateways\Interfaces\TransactionInterface;
 use modmore\Commerce\Gateways\Interfaces\SharedWebhookGatewayInterface;
 use modmore\Commerce\Gateways\Interfaces\WebhookGatewayInterface;
+use modmore\Commerce\Gateways\Interfaces\WebhookTransactionInterface;
 
 class PromptPay implements GatewayInterface, WebhookGatewayInterface, SharedWebhookGatewayInterface {
     /** @var Commerce */
@@ -99,6 +100,16 @@ class PromptPay implements GatewayInterface, WebhookGatewayInterface, SharedWebh
         return false;
     }
 
+    /**
+     * Handle an incoming webhook. Webhook URLs, and fetching the transaction in the webhook, happen transparently.
+     *
+     * $data contains unfiltered information from $_REQUEST.
+     *
+     * @param \comTransaction $transaction
+     * @param array $data
+     * @return WebhookTransactionInterface
+     * @throws TransactionException
+     */
     public function webhook(\comTransaction $transaction, array $data) {
 
         // Verify payment has been made.
@@ -115,43 +126,49 @@ class PromptPay implements GatewayInterface, WebhookGatewayInterface, SharedWebh
 
         $responseData = $response->getData();
         if(!$responseData) throw new TransactionException('Error communicating with Omise when attempting to verify payment...');
-        //$this->commerce->modx->log(MODX_LOG_LEVEL_ERROR,print_r($responseData,true));
+        $this->commerce->modx->log(MODX_LOG_LEVEL_DEBUG,print_r($responseData,true));
 
         // Debugging ONLY
-        // $responseData['status'] = 'successful';
+        //$responseData['status'] = 'successful';
 
         $data['charge'] = $responseData;
-        $order = new \DigitalPenguin\Commerce_Omise\Gateways\Transactions\PromptPay\PromptPay($transaction->getOrder(),$data);
+        $promptPayTransaction = new \DigitalPenguin\Commerce_Omise\Gateways\Transactions\PromptPay\PromptPay($transaction->getOrder(),$data);
+
+        // For debugging, set MODX to log level 4
+        $this->commerce->modx->log(MODX_LOG_LEVEL_DEBUG,$responseData['status']);
 
         $successful = false;
         switch($responseData['status']) {
+
             case 'successful':
                 $successful = true;
                 break;
+            case 'expired':
+                $promptPayTransaction->setFailed(true);
+                $promptPayTransaction->setErrorMessage('expired');
+                break;
             case 'failed_processing':
-                $order->setFailed(true);
-                $order->setErrorMessage('failed_processing');
+                $promptPayTransaction->setFailed(true);
+                $promptPayTransaction->setErrorMessage('failed_processing');
                 break;
             case 'insufficient_balance':
-                $order->setFailed(true);
-                $order->setErrorMessage('insufficient_balance');
+                $promptPayTransaction->setFailed(true);
+                $promptPayTransaction->setErrorMessage('insufficient_balance');
                 break;
             case 'payment_cancelled':
-                $order->setCancelled(true);
-                $order->setErrorMessage('payment_cancelled');
+                $promptPayTransaction->setCancelled(true);
+                $promptPayTransaction->setErrorMessage('payment_cancelled');
                 break;
             default:
-                throw new TransactionException('Unknown charge status returned from Omise.');
+                // default is pending
         }
 
         if($successful) {
-            $order->setAwaitingConfirmation(false);
-            $order->setPaid(true);
+            $promptPayTransaction->setAwaitingConfirmation(true);
+            $promptPayTransaction->setPaid(true);
         }
 
-
-
-        return $order;
+        return $promptPayTransaction;
     }
 
     /**
@@ -228,6 +245,7 @@ class PromptPay implements GatewayInterface, WebhookGatewayInterface, SharedWebh
      */
     public function returned(comTransaction $transaction, array $data)
     {
+
         return new \DigitalPenguin\Commerce_Omise\Gateways\Transactions\PromptPay\PromptPay($transaction->getOrder(),$data);
 
     }
