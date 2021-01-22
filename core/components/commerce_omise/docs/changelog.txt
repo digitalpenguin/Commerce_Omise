@@ -1,3 +1,10 @@
+Commerce_Omise for Commerce 1.2.0-beta2
+---------------------------------
+Released on 22/01/2021
+
+- Fixed module load error when using webhook
+- Refactored PromptPay transaction to ensure it's immutable.
+
 Commerce_Omise for Commerce 1.2.0-beta1
 ---------------------------------
 Released on 02/01/2020

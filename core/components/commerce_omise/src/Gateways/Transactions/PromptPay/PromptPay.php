@@ -11,7 +11,6 @@ class PromptPay implements TransactionInterface, WebhookTransactionInterface {
     private $extra = [];
     private $isPaid = false;
     private $isFailed = false;
-    private $isAwaitingConfirmation = true;
     private $isCancelled = false;
 
     public function __construct($order,$data) {
@@ -22,7 +21,6 @@ class PromptPay implements TransactionInterface, WebhookTransactionInterface {
         if(isset($this->data['charge']['status'])) {
             $this->isPaid = $data['charge']['status'] === 'successful' ?? false;
 
-            $this->isAwaitingConfirmation = $data['charge']['status'] === 'successful' ? false : true;
 
             $this->isFailed = in_array($this->data['charge']['status'],[
                 'expired',
@@ -76,7 +74,10 @@ class PromptPay implements TransactionInterface, WebhookTransactionInterface {
      * @return bool
      */
     public function isAwaitingConfirmation() {
-        return $this->isAwaitingConfirmation;
+        if(isset($this->data['charge']))
+            return $this->data['charge']['status'] === 'successful' ? false : true;
+        else
+            return true;
     }
 
     /**
