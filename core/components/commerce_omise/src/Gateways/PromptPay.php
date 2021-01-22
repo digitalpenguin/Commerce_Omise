@@ -194,18 +194,6 @@ class PromptPay implements GatewayInterface, WebhookGatewayInterface, SharedWebh
 
         $order = $transaction->getOrder();
 
-        /*
-         * Check if currency has subunits.
-         * If a currency has subunits, it needs to be formatted correctly when sending to the API
-         */
-        $currency = $order->getCurrency();
-        if($currency->get('subunits') > 0) {
-            // Convert from cents if currency has subunits
-            $total = round($order->get('total') / 100, $currency->get('subunits'));
-            // Ensure using decimal point if currency has subunits.
-            $total = str_replace(',', '.', (string)$total);
-        }
-
         $secretKey = $this->method->getProperty('liveSecretApiKey');
         if($this->commerce->isTestMode()) {
             $secretKey = $this->method->getProperty('sandboxSecretApiKey');
@@ -245,9 +233,7 @@ class PromptPay implements GatewayInterface, WebhookGatewayInterface, SharedWebh
      */
     public function returned(comTransaction $transaction, array $data)
     {
-
         return new \DigitalPenguin\Commerce_Omise\Gateways\Transactions\PromptPay\PromptPay($transaction->getOrder(),$data);
-
     }
 
     /**

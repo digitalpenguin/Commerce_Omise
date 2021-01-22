@@ -43,12 +43,20 @@ class Omise extends BaseModule {
         // Register the gateway
         $dispatcher->addListener(\Commerce::EVENT_GET_PAYMENT_GATEWAYS, [$this, 'addGateway']);
 
-        // Load JS lib on checkout pages
-        if($this->commerce->modx->context->get('key') !== 'mgr') {
-            if ($this->commerce->modx->resource->get('id') === (int)$this->commerce->modx->getOption('commerce.checkout_resource')) {
-                $jsUrl = 'https://cdn.omise.co/omise.js';
-                $this->commerce->modx->regClientStartupScript($jsUrl);
-            }
+        // Load Omise JS lib on checkout pages
+        $dispatcher->addListener(\Commerce::EVENT_CHECKOUT_AFTER_STEP, [$this, 'injectLibrary']);
+
+
+    }
+
+    /**
+     * Load Omise JS lib on checkout pages
+     * Needs to happen here as opposed to within the gateway classes as they all use the same.
+     */
+    public function injectLibrary() {
+        if ($this->commerce->modx->resource->get('id') === (int)$this->commerce->modx->getOption('commerce.checkout_resource')) {
+            $jsUrl = 'https://cdn.omise.co/omise.js';
+            $this->commerce->modx->regClientStartupScript($jsUrl);
         }
     }
 
