@@ -74,7 +74,7 @@ class PromptPay implements GatewayInterface, WebhookGatewayInterface, SharedWebh
         $data = json_decode(file_get_contents('php://input'), true);
         if(empty($data)) return false;
 
-        $this->commerce->modx->log(MODX_LOG_LEVEL_INFO,print_r($data,true));
+        $this->commerce->modx->log(MODX_LOG_LEVEL_DEBUG,print_r($data,true));
 
         // Sanitize charge id and key strings
         $chargeId = filter_var($data['data']['id'],FILTER_SANITIZE_STRING);
@@ -126,49 +126,16 @@ class PromptPay implements GatewayInterface, WebhookGatewayInterface, SharedWebh
 
         $responseData = $response->getData();
         if(!$responseData) throw new TransactionException('Error communicating with Omise when attempting to verify payment...');
-        $this->commerce->modx->log(MODX_LOG_LEVEL_DEBUG,print_r($responseData,true));
 
         // Debugging ONLY
         //$responseData['status'] = 'successful';
 
         $data['charge'] = $responseData;
-        $promptPayTransaction = new \DigitalPenguin\Commerce_Omise\Gateways\Transactions\PromptPay\PromptPay($transaction->getOrder(),$data);
 
         // For debugging, set MODX to log level 4
         $this->commerce->modx->log(MODX_LOG_LEVEL_DEBUG,$responseData['status']);
 
-        $successful = false;
-        switch($responseData['status']) {
-
-            case 'successful':
-                $successful = true;
-                break;
-            case 'expired':
-                $promptPayTransaction->setFailed(true);
-                $promptPayTransaction->setErrorMessage('expired');
-                break;
-            case 'failed_processing':
-                $promptPayTransaction->setFailed(true);
-                $promptPayTransaction->setErrorMessage('failed_processing');
-                break;
-            case 'insufficient_balance':
-                $promptPayTransaction->setFailed(true);
-                $promptPayTransaction->setErrorMessage('insufficient_balance');
-                break;
-            case 'payment_cancelled':
-                $promptPayTransaction->setCancelled(true);
-                $promptPayTransaction->setErrorMessage('payment_cancelled');
-                break;
-            default:
-                // default is pending
-        }
-
-        if($successful) {
-            $promptPayTransaction->setAwaitingConfirmation(true);
-            $promptPayTransaction->setPaid(true);
-        }
-
-        return $promptPayTransaction;
+        return new \DigitalPenguin\Commerce_Omise\Gateways\Transactions\PromptPay\PromptPay($transaction->getOrder(),$data);
     }
 
     /**
@@ -181,7 +148,7 @@ class PromptPay implements GatewayInterface, WebhookGatewayInterface, SharedWebh
      */
     public function submit(comTransaction $transaction, array $data)
     {
-        $this->commerce->modx->log(MODX_LOG_LEVEL_INFO,print_r($_POST,true));
+        $this->commerce->modx->log(MODX_LOG_LEVEL_DEBUG,print_r($_POST,true));
 
         // Validate the request
         if (!array_key_exists('omise_promptpay_token', $data) || empty($data['omise_promptpay_token'])) {
@@ -207,9 +174,11 @@ class PromptPay implements GatewayInterface, WebhookGatewayInterface, SharedWebh
         ];
         $response = $client->request('/charges',$requestParams,'POST');
 
-
         $responseData = $response->getData();
         if(!$responseData) throw new TransactionException('Error communicating with Omise...');
+        $this->commerce->modx->log(MODX_LOG_LEVEL_DEBUG,print_r($responseData,true));
+
+        $data['charge'] = $responseData;
 
         $qrUri = $responseData['source']['scannable_code']['image']['download_uri'];
         $transaction->setProperty('omise_promptpay_qrcode',$qrUri);
@@ -217,11 +186,7 @@ class PromptPay implements GatewayInterface, WebhookGatewayInterface, SharedWebh
         // Set Charge id in transaction
         $transaction->setProperty('charge_id',$responseData['id']);
 
-        $this->commerce->modx->log(MODX_LOG_LEVEL_INFO,print_r($responseData,true));
-
-
-        $promptPayTransaction = new \DigitalPenguin\Commerce_Omise\Gateways\Transactions\PromptPay\PromptPay($order,$data);
-        return $promptPayTransaction;
+        return new \DigitalPenguin\Commerce_Omise\Gateways\Transactions\PromptPay\PromptPay($order,$data);
     }
 
     /**

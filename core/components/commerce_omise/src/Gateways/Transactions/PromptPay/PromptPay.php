@@ -8,18 +8,31 @@ class PromptPay implements TransactionInterface, WebhookTransactionInterface {
 
     private $data;
     private $order;
-    private $failed = false;
-    private $paid = false;
-    private $cancelled = false;
-    private $awaitingConfirmation = true;
-    private $errorMessage = '';
-    private $paymentReference = '';
     private $extra = [];
+    private $isPaid = false;
+    private $isFailed = false;
+    private $isAwaitingConfirmation = true;
+    private $isCancelled = false;
 
     public function __construct($order,$data) {
         $this->data = $data;
         $this->order = $order;
         $this->extra['charge_data'] = $data['charge'];
+
+        if(isset($this->data['charge']['status'])) {
+            $this->isPaid = $data['charge']['status'] === 'successful' ?? false;
+
+            $this->isAwaitingConfirmation = $data['charge']['status'] === 'successful' ? false : true;
+
+            $this->isFailed = in_array($this->data['charge']['status'],[
+                'expired',
+                'failed_processing',
+                'insufficient_balance'
+            ],true);
+
+            $this->isCancelled = $data['charge']['status'] === 'payment_cancelled' ?? false;
+        }
+
     }
 
     /**
@@ -41,18 +54,13 @@ class PromptPay implements TransactionInterface, WebhookTransactionInterface {
         return 200;
     }
 
-
     /**
      * Indicate if the transaction was paid
      *
      * @return bool
      */
     public function isPaid() {
-        return $this->paid;
-    }
-
-    public function setPaid($isPaid) {
-        $this->paid = $isPaid;
+        return $this->isPaid;
     }
 
     /**
@@ -68,11 +76,7 @@ class PromptPay implements TransactionInterface, WebhookTransactionInterface {
      * @return bool
      */
     public function isAwaitingConfirmation() {
-        return $this->awaitingConfirmation;
-    }
-
-    public function setAwaitingConfirmation($isAwaitingConfirmation) {
-        $this->awaitingConfirmation = $isAwaitingConfirmation;
+        return $this->isAwaitingConfirmation;
     }
 
     /**
@@ -82,11 +86,7 @@ class PromptPay implements TransactionInterface, WebhookTransactionInterface {
      * @see TransactionInterface::getExtraInformation()
      */
     public function isFailed() {
-        return $this->failed;
-    }
-
-    public function setFailed($isFailed) {
-        $this->failed = $isFailed;
+        return $this->isFailed;
     }
 
     /**
@@ -96,11 +96,7 @@ class PromptPay implements TransactionInterface, WebhookTransactionInterface {
      * @return bool
      */
     public function isCancelled() {
-        return $this->cancelled;
-    }
-
-    public function setCancelled($isCancelled) {
-        $this->cancelled = $isCancelled;
+        return $this->isCancelled;
     }
 
     /**
@@ -109,11 +105,7 @@ class PromptPay implements TransactionInterface, WebhookTransactionInterface {
      * @return string
      */
     public function getErrorMessage() {
-        return $this->errorMessage;
-    }
-
-    public function setErrorMessage($errorMessage) {
-        $this->errorMessage = $errorMessage;
+        return '';
     }
 
     /**
@@ -122,11 +114,7 @@ class PromptPay implements TransactionInterface, WebhookTransactionInterface {
      * @return string
      */
     public function getPaymentReference() {
-        return $this->paymentReference;
-    }
-
-    public function setPaymentReference($paymentReference) {
-        $this->paymentReference = $paymentReference;
+        return isset($this->data['charge']['id']) ? $this->data['charge']['id'] : false;
     }
 
     /**
